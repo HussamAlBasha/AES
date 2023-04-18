@@ -22,12 +22,8 @@ int main() {
     unsigned char c;
 
     cout << "Please enter characters, or hit Enter to stop: ";
-   
-    while (cin >> c) {
-        // check for the Enter key using cin.peek()
-        if (c == '\r' || c == '\n' || cin.peek() == '\r' || cin.peek() == '\n') {
-            break;
-        }
+
+    while ((c = cin.get()) != EOF && c != '\n') {
         // grow the array by 1 and copy the existing elements to the new array
         unsigned char* temp = new unsigned char[size + 1];
         for (int i = 0; i < size; i++) {
@@ -41,19 +37,9 @@ int main() {
         size++;
     }
 
-    cout << "You entered: ";
-    for (int i = 0; i < size; i++) {
-        cout << message[i];
-    }
-    cout << endl;
-
-    ////////////////////////////////////////
     generate_random_16_Byte(key);
     generate_random_16_Byte(IV);
     KeyExpansion(key, expandedKeys);
-
-    
-
 
     // I: Padding the message
 
@@ -67,6 +53,12 @@ int main() {
 
     //printing initial information
 
+    cout << "You entered: ";
+    for (int i = 0; i < size; i++) {
+        cout << message[i];
+    }
+    cout << endl;
+
     cout << endl << "Original Generated Random key before expansion: ";
     print_hex(key, sizeof(key));
     cout << "\n" << endl;
@@ -77,7 +69,7 @@ int main() {
 
     cout << endl;
     cout << "Message with no padding : ";
-    print_hex(message, sizeof(message));
+    print_hex(message, size);
     cout << "\n" << endl;
     cout << "Message with padding    : ";
     print_hex(padded_message, padded_length);
@@ -131,7 +123,11 @@ int main() {
     print_hex(decrypted_message, padded_length);
     cout << "\n" << endl;
 
-    cout << decrypted_message << "\n" << endl;
+    cout << "Decrypted message that you entered: ";
+    for (int i = 0; i < size; i++) {
+        cout << hex<< decrypted_message[i];
+    }
+    cout << endl;
 
     // Decryption done!
 
