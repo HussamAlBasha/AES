@@ -21,16 +21,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Padding.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CNG.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cipher.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CNG.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Padding.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
