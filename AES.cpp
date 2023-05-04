@@ -12,7 +12,7 @@ int block_size = 16;
 unsigned char key[16];
 unsigned char IV[16];
 unsigned char expandedKeys[176];
-const  int max_size = 10;
+const  int max_size = 20;//buffer size for input 
 int main() {
 
     //INITIALISE KEYS AND MESSAGES
@@ -20,34 +20,35 @@ int main() {
     unsigned char* message = nullptr;       // initialize pointer to null
     int size = 0;                           // initialize size to 0
     unsigned char c;
-    try{
-    cout << "Please enter characters, or hit Enter to stop: ";
 
-    while ((c = cin.get()) != EOF && c != '\n' && size < max_size) {
-        // grow the array by 1 and copy the existing elements to the new array
-        unsigned char* temp = new unsigned char[size + 1];
-        for (int i = 0; i < size; i++) {
-            temp[i] = message[i];
+    try {
+        cout << "Please enter characters, or hit Enter to stop: ";
+
+        while ((c = cin.get()) != EOF && c != '\n' && size < max_size) {
+            // grow the array by 1 and copy the existing elements to the new array
+            unsigned char* temp = new unsigned char[size + 1];
+            for (int i = 0; i < size; i++) {
+                temp[i] = message[i];
+            }
+            // add the new character to the end of the new array
+            temp[size] = c;
+            // free the old array and update the pointer and size
+            delete[] message;
+            message = temp;
+            size++;
         }
-        // add the new character to the end of the new array
-        temp[size] = c;
-        // free the old array and update the pointer and size
-        delete[] message;
-        message = temp;
-        size++;
-    }
 
-    if (size >=max_size) {
-        throw std::runtime_error("Message size error, do not attempt buffer overflow.");
+        if (size >= max_size) {
+            throw std::runtime_error("Message size error, do not attempt buffer overflow.");
+        }
     }
-}
     //handled error properly by releasing dynamically allocated memory
-catch (const std::runtime_error& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-    delete[] message;
-    std:: exit(1);
-    
-}
+    catch (const std::runtime_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        delete[] message;
+        std::exit(1);
+
+    }
 
     generate_random_16_Byte(key);
     generate_random_16_Byte(IV);
@@ -55,16 +56,18 @@ catch (const std::runtime_error& e) {
 
     // I: Padding the message
 
-    //int message_length = sizeof(message);
     int message_length = size;
     int padded_length = message_length + block_size - (message_length % block_size);
     unsigned char* padded_message = new unsigned char[padded_length];
+
+
     PKCS_7(message, message_length, block_size, padded_length, padded_message);
 
-    // Padding done!
+    //Padding done!
+
+
 
     //printing initial information
-
     cout << "You entered: ";
     for (int i = 0; i < size; i++) {
         cout << message[i];
@@ -87,24 +90,28 @@ catch (const std::runtime_error& e) {
     print_hex(padded_message, padded_length);
     cout << "\n" << endl;
 
+
+
+
+
     // II: Encryption:
-    unsigned char temp[16];
+    unsigned char temp2[16];
 
     for (int i = 0; i < 16; i++)
-        temp[i] = padded_message[i] ^ IV[i];                          // temp = m[1] ⊕ IV 
+        temp2[i] = padded_message[i] ^ IV[i];                          // temp2 = m[1] ⊕ IV 
 
     unsigned char* encrypted_message = new unsigned char[padded_length];
 
-    Cipher(temp, encrypted_message, expandedKeys);
+    Cipher(temp2, encrypted_message, expandedKeys);
 
     for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
-        temp[j] = padded_message[j + 16] ^ encrypted_message[j];        // temp = m[2] ⊕ c[1]     
+        temp2[j] = encrypted_message[j] ^ padded_message[j + 16];        // temp2 = m[2] ⊕ c[1]     
 
     for (int i = 16; i < padded_length; i += 16)
     {
-        Cipher(temp, encrypted_message + i, expandedKeys);            // c[i] = encrypted_message[i]   
+        Cipher(temp2, encrypted_message + i, expandedKeys);            // c[i] = encrypted_message[i]   
         for (int j = 0; j < 16; j++)
-            temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...            
+            temp2[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp2 = m[3] ⊕ c[2] ...            
     }
 
     cout << "Encrpyted message       : ";
@@ -119,10 +126,10 @@ catch (const std::runtime_error& e) {
 
     unsigned char* decrypted_message = new unsigned char[padded_length];
 
-    InvCipher(encrypted_message, temp, expandedKeys);
+    InvCipher(encrypted_message, temp2, expandedKeys);
 
     for (int i = 0; i < 16; i++)
-        decrypted_message[i] = temp[i] ^ IV[i];
+        decrypted_message[i] = temp2[i] ^ IV[i];
 
     for (int i = 0; i < padded_length; i += 16)
     {
@@ -130,6 +137,7 @@ catch (const std::runtime_error& e) {
         for (int j = 0; j < padded_length; j++)
             decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j];
     }
+
 
     cout << "Decrypted message       : ";
     print_hex(decrypted_message, padded_length);
@@ -139,14 +147,16 @@ catch (const std::runtime_error& e) {
     for (int i = 0; i < size; i++) {
         cout << hex << decrypted_message[i];
     }
+
     cout << endl;
+
 
     // Decryption done!
 
-       /* delete[] padded_message;
-        delete[] encrypted_message;
-        delete[] decrypted_message;
-        delete[] message;*/
+
+    delete[] padded_message;
+    delete[] encrypted_message;
+
 
     return 0;
 }
