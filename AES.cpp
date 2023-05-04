@@ -12,7 +12,7 @@ int block_size = 16;
 unsigned char key[16];
 unsigned char IV[16];
 unsigned char expandedKeys[176];
-
+const  int max_size = 10;
 int main() {
 
     //INITIALISE KEYS AND MESSAGES
@@ -20,10 +20,10 @@ int main() {
     unsigned char* message = nullptr;       // initialize pointer to null
     int size = 0;                           // initialize size to 0
     unsigned char c;
-
+    try{
     cout << "Please enter characters, or hit Enter to stop: ";
 
-    while ((c = cin.get()) != EOF && c != '\n') {
+    while ((c = cin.get()) != EOF && c != '\n' && size < max_size) {
         // grow the array by 1 and copy the existing elements to the new array
         unsigned char* temp = new unsigned char[size + 1];
         for (int i = 0; i < size; i++) {
@@ -36,6 +36,18 @@ int main() {
         message = temp;
         size++;
     }
+
+    if (size >=max_size) {
+        throw std::runtime_error("Message size error, do not attempt buffer overflow.");
+    }
+}
+    //handled error properly by releasing dynamically allocated memory
+catch (const std::runtime_error& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    delete[] message;
+    std:: exit(1);
+    
+}
 
     generate_random_16_Byte(key);
     generate_random_16_Byte(IV);
@@ -125,7 +137,7 @@ int main() {
 
     cout << "Decrypted message that you entered: ";
     for (int i = 0; i < size; i++) {
-        cout << hex<< decrypted_message[i];
+        cout << hex << decrypted_message[i];
     }
     cout << endl;
 
