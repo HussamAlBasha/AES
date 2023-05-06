@@ -3,10 +3,9 @@
 #include "AES.h"
 #include "CNG.h"
 #include "Padding.h"
-//#include "GenRandom.h"
 #include "Cipher.h"
+#include <memory>
 
-//#include "CryptGenRandom.h"
 using namespace std;
 int block_size = 16;
 unsigned char key[16];
@@ -41,15 +40,20 @@ int main() {
     generate_random_16_Byte(IV);
     KeyExpansion(key, expandedKeys);
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // I: Padding the message
 
     //int message_length = sizeof(message);
     int message_length = size;
     int padded_length = message_length + block_size - (message_length % block_size);
-    unsigned char* padded_message = new unsigned char[padded_length];
-    PKCS_7(message, message_length, block_size, padded_length, padded_message);
+    //unsigned char* padded_message = new unsigned char[padded_length];
+    unique_ptr<unsigned char[]> padded_message(new unsigned char[padded_length]);
+    PKCS_7(message, message_length, block_size, padded_length, padded_message.get());
 
     // Padding done!
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //printing initial information
 
@@ -72,8 +76,10 @@ int main() {
     print_hex(message, size);
     cout << "\n" << endl;
     cout << "Message with padding    : ";
-    print_hex(padded_message, padded_length);
+    print_hex(padded_message.get(), padded_length);
     cout << "\n" << endl;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // II: Encryption:
     unsigned char temp[16];
@@ -81,22 +87,23 @@ int main() {
     for (int i = 0; i < 16; i++)
         temp[i] = padded_message[i] ^ IV[i];                          // temp = m[1] ⊕ IV 
 
-    unsigned char* encrypted_message = new unsigned char[padded_length];
+    //unsigned char* encrypted_message = new unsigned char[padded_length];
+    unique_ptr<unsigned char[]> encrypted_message(new unsigned char[padded_length]);
 
-    Cipher(temp, encrypted_message, expandedKeys);
+    Cipher(temp, encrypted_message.get(), expandedKeys);
 
     for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
         temp[j] = padded_message[j + 16] ^ encrypted_message[j];        // temp = m[2] ⊕ c[1]     
 
     for (int i = 16; i < padded_length; i += 16)
     {
-        Cipher(temp, encrypted_message + i, expandedKeys);            // c[i] = encrypted_message[i]   
+        Cipher(temp, encrypted_message.get() + i, expandedKeys);            // c[i] = encrypted_message[i]   
         for (int j = 0; j < 16; j++)
             temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...            
     }
 
     cout << "Encrpyted message       : ";
-    print_hex(encrypted_message, padded_length);
+    print_hex(encrypted_message.get(), padded_length);
     cout << "\n" << endl;
 
     // Encryption done!
@@ -105,22 +112,23 @@ int main() {
 
      // III: Decryption:
 
-    unsigned char* decrypted_message = new unsigned char[padded_length];
+    //unsigned char* decrypted_message = new unsigned char[padded_length];
+    unique_ptr<unsigned char[]> decrypted_message(new unsigned char[padded_length]);
 
-    InvCipher(encrypted_message, temp, expandedKeys);
+    InvCipher(encrypted_message.get(), temp, expandedKeys);
 
     for (int i = 0; i < 16; i++)
         decrypted_message[i] = temp[i] ^ IV[i];
 
     for (int i = 0; i < padded_length; i += 16)
     {
-        InvCipher(encrypted_message + i + 16, decrypted_message + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
+        InvCipher(encrypted_message.get() + i + 16, decrypted_message.get() + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
         for (int j = 0; j < padded_length; j++)
             decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j];
     }
 
     cout << "Decrypted message       : ";
-    print_hex(decrypted_message, padded_length);
+    print_hex(decrypted_message.get(), padded_length);
     cout << "\n" << endl;
 
     cout << "Decrypted message that you entered: ";
@@ -131,10 +139,7 @@ int main() {
 
     // Decryption done!
 
-       /* delete[] padded_message;
-        delete[] encrypted_message;
-        delete[] decrypted_message;
-        delete[] message;*/
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     return 0;
 }
