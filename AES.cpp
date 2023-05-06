@@ -11,14 +11,14 @@ int block_size = 16;
 unsigned char key[16];
 unsigned char IV[16];
 unsigned char expandedKeys[176];
-int global_size=0;
+int global_size = 0;
 int main() {
 
     //INITIALISE KEYS AND MESSAGES
 
-   
+
     const int MAX_SIZE = 50; // maximum size of the static array
-   
+
     int size = 0; // size of the input message
     int max_size = MAX_SIZE; // this is our buffer. as to solve the buffer overflow issue with user-input
 
@@ -39,20 +39,20 @@ int main() {
             i += 1;
         }
     }
-    
-  
+
+
     catch (const std::runtime_error& e) { //catch the thrown error
         cout << endl << e.what() << endl;
         std::exit(1);
     }
-   
 
-  
+
+
     unique_ptr<unsigned char[]> message(new unsigned char[global_size]);
 
     memcpy(message.get(), message_s, global_size);
 
- 
+
 
 
 
@@ -102,7 +102,7 @@ int main() {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // II: Encryption
-    
+
     unsigned char temp[16];
 
     generate_random_16_Byte(IV);
@@ -122,14 +122,17 @@ int main() {
     // Flush the cache for the entire array
     FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
     FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
-    
+
     if (padded_length > 16)
     {
         for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
-        
-            temp[j] = padded_message[j + 16] ^ encrypted_message[j] ^ blinding_factor[j + 16];        // ADDED BLINDING 
+        {
+            temp[j] = padded_message[j + 16] ^ encrypted_message[j] ^ blinding_factor[j + 16];        // ADDED BLINDING
 
-        
+
+
+        }
+
     }
     for (int i = 16; i < padded_length; i += 16)
     {
@@ -164,13 +167,13 @@ int main() {
     for (int i = 0; i < 16; i++)
         decrypted_message[i] = temp[i] ^ IV[i] ^ blinding_factor[i]; //added blinding
 
-    for (int i = 0; i < padded_length-16; i += 16)
+    for (int i = 0; i < padded_length - 16; i += 16)
     {
         InvCipher(encrypted_message.get() + i + 16, decrypted_message.get() + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
         FlushInstructionCache(GetCurrentProcess(), decrypted_message.get(), padded_length);
         FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
         for (int j = 0; j < 16; j++)
-            decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j] ^ blinding_factor[i+j+16];
+            decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j] ^ blinding_factor[i + j + 16];
 
     }
 
@@ -180,19 +183,19 @@ int main() {
 
     cout << "Decrypted message that you entered: ";
     for (int i = 0; i < size; i++) {
-        cout << hex<< decrypted_message[i];
+        cout << hex << decrypted_message[i];
     }
     cout << endl;
 
     // Decryption done!
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   
 
 
 
-   
-    
+
+
+
 
 
     return 0;
