@@ -10,7 +10,7 @@ One important thing to keep in mind is that the padding must always be applied, 
 This is to ensure that the encryption process is deterministic and that an attacker cannot distinguish between padded and unpadded messages.
 */
 
-void PKCS_7(const unsigned char* message, int message_length, int block_size, int padded_length, unsigned char* padded_message)
+void PKCS_7(unsigned char* message, int message_length, int block_size, int padded_length, unsigned char* padded_message)
 {
     // Calculate the number of padding bytes needed
     int padding_length = block_size - (message_length % block_size);

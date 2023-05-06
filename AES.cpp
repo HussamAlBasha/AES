@@ -11,30 +11,48 @@ int block_size = 16;
 unsigned char key[16];
 unsigned char IV[16];
 unsigned char expandedKeys[176];
-
+int global_size=0;
 int main() {
 
     //INITIALISE KEYS AND MESSAGES
 
-    unsigned char* message = nullptr;       // initialize pointer to null
-    int size = 0;                           // initialize size to 0
-    unsigned char c;
+   
+    const int MAX_SIZE = 50; // maximum size of the static array
+   
+    int size = 0; // size of the input message
+    int max_size = MAX_SIZE; // this is our buffer. as to solve the buffer overflow issue with user-input
 
-    cout << "Please enter characters, or hit Enter to stop: ";
-
-    while ((c = cin.get()) != EOF && c != '\n') {
-        // grow the array by 1 and copy the existing elements to the new array
-        unsigned char* temp = new unsigned char[size + 1];
-        for (int i = 0; i < size; i++) {
-            temp[i] = message[i];
+    unsigned char message_s[50]; // dynamic array to hold the input message
+    cout << "fill your array, press enter when done: ";
+    // fill the static array with the input message
+    int c;
+    try {
+        int i = 0;
+        while ((c = cin.get()) != EOF && c != '\n' && size < max_size) {
+            size++;
+            global_size++;
+            if (size >= max_size) {
+                throw std::runtime_error("Message size error, do not attempt buffer overflow.");
+            }
+            message_s[i] = c;
+            i += 1;
         }
-        // add the new character to the end of the new array
-        temp[size] = c;
-        // free the old array and update the pointer and size
-        delete[] message;
-        message = temp;
-        size++;
     }
+  
+    catch (const std::runtime_error& e) {
+        cout << endl << e.what() << endl;
+        std::exit(1);
+    }
+   
+
+  
+    unique_ptr<unsigned char[]> message(new unsigned char[global_size]);
+
+    memcpy(message.get(), message_s, global_size);
+
+ 
+
+
 
     generate_random_16_Byte(key);
     generate_random_16_Byte(IV);
@@ -49,7 +67,7 @@ int main() {
     int padded_length = message_length + block_size - (message_length % block_size);
     //unsigned char* padded_message = new unsigned char[padded_length];
     unique_ptr<unsigned char[]> padded_message(new unsigned char[padded_length]);
-    PKCS_7(message, message_length, block_size, padded_length, padded_message.get());
+    PKCS_7(message.get(), message_length, block_size, padded_length, padded_message.get());
 
     // Padding done!
 
@@ -73,7 +91,7 @@ int main() {
 
     cout << endl;
     cout << "Message with no padding : ";
-    print_hex(message, size);
+    print_hex(message.get(), size);
     cout << "\n" << endl;
     cout << "Message with padding    : ";
     print_hex(padded_message.get(), padded_length);
@@ -84,22 +102,38 @@ int main() {
     // II: Encryption:
     unsigned char temp[16];
 
+    generate_random_16_Byte(IV);
+    unique_ptr<unsigned char[]> blinding_factor(new unsigned char[padded_length]);
+    generate_random_16_Byte(blinding_factor.get());
+
     for (int i = 0; i < 16; i++)
+    {
         temp[i] = padded_message[i] ^ IV[i];                          // temp = m[1] ⊕ IV 
+        temp[i] = temp[i] ^ blinding_factor[i];
+    }
 
     //unsigned char* encrypted_message = new unsigned char[padded_length];
     unique_ptr<unsigned char[]> encrypted_message(new unsigned char[padded_length]);
 
     Cipher(temp, encrypted_message.get(), expandedKeys);
+    // Flush the cache for the entire array
+    FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
 
     for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
-        temp[j] = padded_message[j + 16] ^ encrypted_message[j];        // temp = m[2] ⊕ c[1]     
-
+    {
+        temp[j] = padded_message[j + 16] ^ encrypted_message[j];        // temp = m[2] ⊕ c[1]    
+        
+    }
     for (int i = 16; i < padded_length; i += 16)
     {
-        Cipher(temp, encrypted_message.get() + i, expandedKeys);            // c[i] = encrypted_message[i]   
+        Cipher(temp, encrypted_message.get() + i, expandedKeys);            // c[i] = encrypted_message[i]  
+        FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
         for (int j = 0; j < 16; j++)
-            temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...            
+        {
+            temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...  
+            temp[j] = blinding_factor[j + 16] ^ temp[j];//add blinding
+        }
+
     }
 
     cout << "Encrpyted message       : ";
@@ -117,14 +151,18 @@ int main() {
 
     InvCipher(encrypted_message.get(), temp, expandedKeys);
 
-    for (int i = 0; i < 16; i++)
-        decrypted_message[i] = temp[i] ^ IV[i];
 
-    for (int i = 0; i < padded_length; i += 16)
+    for (int i = 0; i < 16; i++)
+        decrypted_message[i] = temp[i] ^ IV[i] ^ blinding_factor[i]; //added blinding
+
+
+    for (int i = 0; i < padded_length-16; i += 16)
     {
         InvCipher(encrypted_message.get() + i + 16, decrypted_message.get() + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
-        for (int j = 0; j < padded_length; j++)
-            decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j];
+        FlushInstructionCache(GetCurrentProcess(), decrypted_message.get(), padded_length);
+        for (int j = 0; j < 16; j++)
+            decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j] ^ blinding_factor[i+j+16];
+
     }
 
     cout << "Decrypted message       : ";
@@ -140,6 +178,9 @@ int main() {
     // Decryption done!
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   
+   
+
 
     return 0;
 }
