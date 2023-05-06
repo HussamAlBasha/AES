@@ -26,6 +26,7 @@ int main() {
     cout << "fill your array, press enter when done: ";
     // fill the static array with the input message
     int c;
+
     try {
         int i = 0;
         while ((c = cin.get()) != EOF && c != '\n' && size < max_size) {
@@ -38,8 +39,9 @@ int main() {
             i += 1;
         }
     }
+    
   
-    catch (const std::runtime_error& e) {
+    catch (const std::runtime_error& e) { //catch the thrown error
         cout << endl << e.what() << endl;
         std::exit(1);
     }
@@ -99,7 +101,8 @@ int main() {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // II: Encryption:
+    // II: Encryption
+    
     unsigned char temp[16];
 
     generate_random_16_Byte(IV);
@@ -118,21 +121,27 @@ int main() {
     Cipher(temp, encrypted_message.get(), expandedKeys);
     // Flush the cache for the entire array
     FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
-
-    for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
+    FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
+    
+    if (padded_length > 16)
     {
-        temp[j] = padded_message[j + 16] ^ encrypted_message[j];        // temp = m[2] ⊕ c[1]    
+        for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
+        
+            temp[j] = padded_message[j + 16] ^ encrypted_message[j] ^ blinding_factor[j + 16];        // ADDED BLINDING 
+
         
     }
     for (int i = 16; i < padded_length; i += 16)
     {
         Cipher(temp, encrypted_message.get() + i, expandedKeys);            // c[i] = encrypted_message[i]  
         FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
+        FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
         for (int j = 0; j < 16; j++)
         {
             temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...  
-            temp[j] = blinding_factor[j + 16] ^ temp[j];//add blinding
+            temp[j] = blinding_factor[j + i] ^ temp[j];//add blinding
         }
+
 
     }
 
@@ -155,11 +164,11 @@ int main() {
     for (int i = 0; i < 16; i++)
         decrypted_message[i] = temp[i] ^ IV[i] ^ blinding_factor[i]; //added blinding
 
-
     for (int i = 0; i < padded_length-16; i += 16)
     {
         InvCipher(encrypted_message.get() + i + 16, decrypted_message.get() + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
         FlushInstructionCache(GetCurrentProcess(), decrypted_message.get(), padded_length);
+        FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
         for (int j = 0; j < 16; j++)
             decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j] ^ blinding_factor[i+j+16];
 
@@ -179,7 +188,11 @@ int main() {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    
+
+
+
    
+    
 
 
     return 0;
