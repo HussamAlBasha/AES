@@ -12,13 +12,6 @@ unsigned char expandedKeys[176];
 int global_size = 0;
 const int MAX_SIZE = 1024; // Maximum size of the static array
 
-void clearInputBuffer()
-{
-    while (std::cin.get() != '\n')
-    {
-        continue;
-    }
-}
 
 int main() {
 
@@ -26,8 +19,6 @@ int main() {
     cout << "Note that spaces and '.' and ',' are counted as characters as well." << endl;
     cout << "\n";
 
-    while (true) {
-        start_of_loop:
         //INITIALISE KEYS AND MESSAGES           
         int size = 0;                                 // Size of the input message
         int max_size = MAX_SIZE;                      // This is our buffer. As to solve the buffer overflow issue with user-input
@@ -53,10 +44,9 @@ int main() {
         }
         catch (const std::runtime_error& e) { //catch the thrown error
             cout << endl << e.what() << endl;
-            //std::exit(1);
-            clearInputBuffer();
-            cout << "Try to type your message again with a size within the boundary which is " << MAX_SIZE << "." << endl;
-            goto start_of_loop;
+            std::exit(1);
+            
+
         }
 
         // Advantages of unique_ptr  stated below
@@ -194,8 +184,8 @@ int main() {
         // Decryption done!
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        cout << "If you want to exit press Ctrl + C." << endl;
-    }
+       
+    
 }
 
 // Using unique_ptr in encryption implementations can provide several advantages over raw pointers :
