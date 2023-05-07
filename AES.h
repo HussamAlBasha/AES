@@ -1,15 +1,3 @@
-#include <iostream>
-#include <cstring>
-
-//Number of columns (32-bit words) comprising the State. For this standard, Nb = 4. 
-//uint8_t Nb=4;
-
-//Number of 32-bit words comprising the Cipher Key. For this standard, Nk = 4, 6, or 8.
-//uint8_t Nk=4; 
-
-//Number of rounds, which is a function of Nk and Nb (which is fixed). For this standard, Nr = 10, 12, or 14.
-//uint8_t Nr=10; 
-
 
 //Rcon is constant word array of the form (RC[i], 0, 0, 0)
 //RC[1] = 1, RC[j] = 2.RC[j-1] in GF(28).
@@ -63,13 +51,6 @@ void print_hex(unsigned char* arr, int len)
 		printf("%02x ", arr[i]);
 	}
 }
-
-/*
-	w0 03 01 01     s0 s4 s8  s12
-	01 02 03 01  .  s1 s5 s9  s13
-	01 01 02 03     s2 s6 s10 s14
-	03 01 01 02     s3 s7 s11 s15
-*/
 
 //KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk)
 void KeyExpansion(unsigned char key[16], unsigned char w[176]) { //16 bytes in, 44 words out = 176 bytes
@@ -196,28 +177,32 @@ void InvShiftRows(unsigned char state[16]) {
 		state[i] = tmp[i];
 }
 
-unsigned char xtime(unsigned char  a) //like a mul 02
-{	// FIRST CONDITION If b7 = 0, the result is already in reduced form.  
-	//SECOND CONDITION If b7 = 1, the reduction is accomplished by subtracting (i.e., XORing) with 0x1b since 0x1b =00011011. 
-	//this works because if x7=1 we xor with 0x1b meaning it is like effectively obtaining the modulo when our answer is >= irreducible polynomial
+unsigned char xtime(unsigned char  a) // Like a mul 02
+{	
+	// FIRST CONDITION  If b7 = 0, the result is already in reduced form.  
+	// SECOND CONDITION If b7 = 1, the reduction is accomplished by subtracting (i.e., XORing) with 0x1b since 0x1b =00011011. 
+	// This works because if x7=1 we xor with 0x1b meaning it is like effectively obtaining the modulo when our answer is >= irreducible polynomial
 	unsigned char temp;
 	temp = a << 1;
-	//first condition
-	//0x80 is 0b10000000
+
+	// First condition
+	// 0x80 is 0b10000000
 	if ((a & 0x80) != 0) {//last bit of a,x^7, is 1. meaning when we right shift, we get x^s8 which is not acceptable are getting modulo against the irreducible poly which limits the size of the remainder of this operation to being of size 8 bits x^7->x^0
 		temp = temp ^ 0x1b;
 	}    //note that 0b00011011 is 0x1b
-//scond condition
+	// Second condition
 	return temp;
 }
 
-unsigned char GMul(unsigned char  a, unsigned char b) {
-	//note that this works because we can write {57} • {13} = {57} • ({01} xor {02} xor {10})
-	//this means that any 0x13 is wrriten as 00010011=00000001+00000001+00010000
+unsigned char GMul(unsigned char  a, unsigned char b)
+{
+	// Note that this works because we can write {57} • {13} = {57} • ({01} xor {02} xor {10})
+	// This means that any 0x13 is wrriten as 00010011=00000001+00000001+00010000
 	//we use this notation in the previous line to distribute the multiplicaion on garlois field over multiples of 2 and use our xtime( function efficiently.
 	unsigned char temp = a;
 	unsigned char res = 0;
-	//conventional loop would run for i=0->8. but my implementation is more efficient because if all bits towards left are 0, then we can quit our loop as result will not be changed
+
+	// Conventional loop would run for i=0->8. but my implementation is more efficient because if all bits towards left are 0, then we can quit our loop as result will not be changed
 	while ((b & 0xff) != 0)//while b can be shifted more to the right
 	{
 		if ((b & 0x01) == 0x01)res = res ^ temp;//if lsb of b is 1
