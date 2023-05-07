@@ -106,40 +106,37 @@ int main() {
         unsigned char temp[16] = { 0 };
 
         generate_random_16_Byte(IV);
-        unique_ptr<unsigned char[]> blinding_factor(new unsigned char[padded_length]);
-        generate_random_16_Byte(blinding_factor.get());
+        
 
         for (int i = 0; i < 16; i++)
         {
             temp[i] = padded_message[i] ^ IV[i];                          // temp = m[1] ⊕ IV 
-            temp[i] = temp[i] ^ blinding_factor[i];
+           
         }
 
         //unsigned char* encrypted_message = new unsigned char[padded_length];
         unique_ptr<unsigned char[]> encrypted_message(new unsigned char[padded_length]);
 
         Cipher(temp, encrypted_message.get(), expandedKeys);
-        // Flush the cache for the entire array
-        FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
-        FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
+    
+        
 
         if (padded_length > 16)
         {
             for (int j = 0; j < 16; j++)                                          // take C1 to propagate it forward
             {
-                temp[j] = padded_message[j + 16] ^ encrypted_message[j] ^ blinding_factor[j + 16];        // ADDED BLINDING
+                temp[j] = padded_message[j + 16] ^ encrypted_message[j];
             }
 
         }
         for (int i = 16; i < padded_length; i += 16)
         {
             Cipher(temp, encrypted_message.get() + i, expandedKeys);            // c[i] = encrypted_message[i]  
-            FlushInstructionCache(GetCurrentProcess(), encrypted_message.get(), padded_length);
-            FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
+            
             for (int j = 0; j < 16; j++)
             {
                 temp[j] = padded_message[i + j + 16] ^ encrypted_message[i + j];  // temp = m[3] ⊕ c[2] ...  
-                temp[j] = blinding_factor[j + i] ^ temp[j];//add blinding
+               
             }
         }
 
@@ -160,15 +157,14 @@ int main() {
 
 
         for (int i = 0; i < 16; i++)
-            decrypted_message[i] = temp[i] ^ IV[i] ^ blinding_factor[i]; //added blinding
+            decrypted_message[i] = temp[i] ^ IV[i];
 
         for (int i = 0; i < padded_length - 16; i += 16)
         {
             InvCipher(encrypted_message.get() + i + 16, decrypted_message.get() + i + 16, expandedKeys);      //c[i] = encrypted_message[i]
-            FlushInstructionCache(GetCurrentProcess(), decrypted_message.get(), padded_length);
-            FlushInstructionCache(GetCurrentProcess(), expandedKeys, 176);
+           
             for (int j = 0; j < 16; j++)
-                decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j] ^ blinding_factor[i + j + 16];
+                decrypted_message[i + 16 + j] = decrypted_message[i + 16 + j] ^ encrypted_message[i + j];
         }
 
         cout << "Decrypted message       : ";
