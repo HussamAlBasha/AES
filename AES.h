@@ -136,7 +136,7 @@ void ShiftRows(unsigned char state[16])
 	tmp[11] = state[7];
 
 	// Column 4 
-	tmp[12] = state[12];
+	tmp[12] = state[12];	
 	tmp[13] = state[1];
 	tmp[14] = state[6];
 	tmp[15] = state[11];
