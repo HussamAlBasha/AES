@@ -1,6 +1,5 @@
-
-//Rcon is constant word array of the form (RC[i], 0, 0, 0)
-//RC[1] = 1, RC[j] = 2.RC[j-1] in GF(28).
+// Rcon is constant word array of the form (RC[i], 0, 0, 0)
+// RC[1] = 1, RC[j] = 2.RC[j-1] in GF(28).
 // [x^(i-1),{00},{00},{00}], with x (i-1) being  powers of x (x is denoted as {02}) (note that i starts at 1, not 0).
 
 unsigned char Rcon[11] = { 0xff,0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36 };
@@ -52,7 +51,7 @@ void print_hex(unsigned char* arr, int len)
 	}
 }
 
-//KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk)
+// KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk)
 void KeyExpansion(unsigned char key[16], unsigned char w[176]) { //16 bytes in, 44 words out = 176 bytes
 
 	unsigned char temp[4]; //temp word

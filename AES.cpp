@@ -1,9 +1,11 @@
 ﻿#include <iostream>
-#include "AES.h"
-#include "CNG.h"
-#include "Padding.h"
-#include "Cipher.h"
 #include <memory>
+
+#include "AES.h"
+#include "Cipher.h"
+#include "Padding.h"
+#include "CNG.h"
+
 using namespace std;
 int block_size = 16;
 unsigned char key[16];
@@ -206,7 +208,6 @@ int main() {
         else {
             break;
         }
-
     }
 }
 

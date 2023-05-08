@@ -1,4 +1,3 @@
-
 // Nb = 4 words(16 bytes/unsigned chars). 
 // Number of columns (32-bit words) comprising the State.
 // Nr = 10
