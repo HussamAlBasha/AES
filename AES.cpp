@@ -55,7 +55,7 @@ int main() {
             cout << endl << e.what() << endl;
             //std::exit(1);
             clearInputBuffer();
-            cout << "Try to type your message again with a size within the boundary which is " << MAX_SIZE << "." << endl;
+            cout << "Try to type your message again with a size within the boundary."<< endl;
             goto start_of_loop;
         }
 
@@ -194,7 +194,19 @@ int main() {
         // Decryption done!
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        cout << "If you want to exit press Ctrl + C." << endl;
+        cout << "If you want to continue type 'yes' or 'y'. If you type anything else you will exit. \n" << endl;
+        cout << ">> ";
+        string input;
+        cin >> input;
+
+        if (input == "yes" or input=="y") {
+            clearInputBuffer();
+            continue;
+        }
+        else {
+            break;
+        }
+
     }
 }
 
