@@ -5,11 +5,7 @@
 Here is where the main function is located. After running this file (that includes 4 headers mentioned below), you will be prompted to input a string of characters of size <buffer size>.
 The code will run encryption and decryption sequentially to verify that the implementation is correct. The input message is printed at the beginning, as well as the padded messege, and decrypted messege (your original input).
 
--Dependencies:
-AES.h
-CNG.h
-Padding.h
-Cipher.h
+-Dependencies: AES.h, CNG.h, Padding.h, Cipher.h
   
 ////////////////////////////////////////////////////////
 
@@ -20,9 +16,7 @@ This file cannot be run simultaneously with AES.cpp becuse it contines a main fu
 For conveniance (document from NIST website):
 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/aesmct.zip
 
-Dependencies:
-Cipher.h
-AES.h
+Dependencies: Cipher.h & AES.h
   
 ///////////////////////////////////////////////////////
 
