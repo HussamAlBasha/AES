@@ -1,13 +1,9 @@
 #include <windows.h>
 #include <bcrypt.h>
-#include <iostream>
-#include <ntstatus.h>
 using namespace std;
 
-//https://learn.microsoft.com/en-us/windows/win32/seccng/typical-cng-programming 
-// 
+//   https://learn.microsoft.com/en-us/windows/win32/seccng/typical-cng-programming 
 //   The typical steps involved in using the CNG API for cryptographic primitive operations are as follows :
-
 //1) Opening the Algorithm Provider
 //2) Getting or Setting Algorithm Properties
 //3) Creating or Importing a Key
@@ -23,18 +19,24 @@ void generate_random_16_Byte(unsigned char key[16])
     NTSTATUS status;
     //DWORD dwDataLen = 16; // 128-bit key length
 
-    if (NT_SUCCESS(status = BCryptOpenAlgorithmProvider(&hProvider, BCRYPT_RNG_ALGORITHM, NULL, 0)))
+    status = BCryptOpenAlgorithmProvider(&hProvider, BCRYPT_RNG_ALGORITHM, NULL, 0);
+    if (!NT_SUCCESS(status))
     {
-        status = BCryptGenRandom(hProvider, key, 16, 0);
-        BCryptCloseAlgorithmProvider(hProvider, 0);
+        // This might tell the adversery where is the error
+        //cerr << "Error opening algorithm provider: " << hex << status << endl;
+        cerr << "Error!" << endl;
+        return;
     }
-    else
+
+    status = BCryptGenRandom(hProvider, key, 16, 0);
+    if (!NT_SUCCESS(status))
     {
-        cerr << "Error opening algorithm provider: " << hex << status << endl;
+        // This might tell the adversery where is the error
+        //cerr << "Error generating random data: " << hex << status << endl;
+        cerr << "Error!" << endl;
     }
+    BCryptCloseAlgorithmProvider(hProvider, 0);
 }
-
-
 
 
 // Link: https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
@@ -66,7 +68,7 @@ void generate_random_16_Byte(unsigned char key[16])
 
 
 //Return value
-//
+
 //Returns a status code that indicates the success or failure of the function.
 //Possible return codes include, but are not limited to, the following.
 //
