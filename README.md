@@ -27,18 +27,13 @@ AES.h
 ///////////////////////////////////////////////////////
 
 
-AES.h:
--Contains functions needed for AES encryption and the sbox, inverse sbox.
-explained in the implementation section.
+AES.h: Contains functions needed for AES encryption, the sbox, and the inverse sbox. Explained in the implementation section.
+  
+CNG.h: Contains the code for generating random key and IV using windows API.
 
-CNG.h:
--Contains the code for generating random key and IV using windows API
+padding.h: Function that pads input to multiples of 16.
 
-padding.h
--Function that pads input to multiples of 16
-
-Cipher.h
--Contains the skeleton for encryption and decryption. this header file uses the functions in AES.h
+Cipher.h: Contains the skeleton for encryption and decryption. this header file uses the functions in AES.h.
 
 
 
