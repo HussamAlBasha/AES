@@ -38,6 +38,31 @@ void generate_random_16_Byte(unsigned char key[16])
     BCryptCloseAlgorithmProvider(hProvider, 0);
 }
 
+void generate_random_Bytes(unsigned char* hold_rand, int size)
+{
+    BCRYPT_ALG_HANDLE hProvider;
+    NTSTATUS status;
+    //DWORD dwDataLen = 16; // 128-bit key length
+
+    status = BCryptOpenAlgorithmProvider(&hProvider, BCRYPT_RNG_ALGORITHM, NULL, 0);
+    if (!NT_SUCCESS(status))
+    {
+        // This might tell the adversery where is the error
+        //cerr << "Error opening algorithm provider: " << hex << status << endl;
+        cerr << "Error!" << endl;
+        return;
+    }
+
+    status = BCryptGenRandom(hProvider, hold_rand, size, 0);
+    if (!NT_SUCCESS(status))
+    {
+        // This might tell the adversery where is the error
+        //cerr << "Error generating random data: " << hex << status << endl;
+        cerr << "Error!" << endl;
+    }
+    BCryptCloseAlgorithmProvider(hProvider, 0);
+}
+
 
 // Link: https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
 //The BCryptGenRandom function generates a random number.

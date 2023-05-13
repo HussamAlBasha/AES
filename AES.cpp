@@ -117,14 +117,12 @@ int main() {
         // We should initialize
         unsigned char temp[16] = { 0 };
 
-        generate_random_16_Byte(IV);
         unique_ptr<unsigned char[]> blinding_factor(new unsigned char[padded_length]);
-        generate_random_16_Byte(blinding_factor.get());
+        generate_random_Bytes(blinding_factor.get(), padded_length);
 
         for (int i = 0; i < 16; i++)
         {
-            temp[i] = padded_message[i] ^ IV[i];                          // temp = m[1] ⊕ IV 
-            temp[i] = temp[i] ^ blinding_factor[i];
+            temp[i] = padded_message[i] ^ IV[i] ^ blinding_factor[i];                          // temp = m[1] ⊕ IV ⊕ blinding
         }
 
         //unsigned char* encrypted_message = new unsigned char[padded_length];
